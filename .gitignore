@@ -1,0 +1,33 @@
+# Build output directory
+build/
+bin/
+out/
+
+# CMake generated files
+CMakeCache.txt
+CMakeFiles/
+Makefile
+cmake_install.cmake
+compile_commands.json
+*_autogen/
+
+# Qt Creator machine-specific configuration files
+*.user
+*.user.*
+.qtcreator/
+
+# Compiled C++ object files and binaries
+*.o
+*.obj
+*.so
+*.dylib
+*.dll
+*.exe
+
+# OS junk files
+.DS_Store
+Thumbs.db
+
+# Explicitly keep VS Code task & setting configs so build/run commands work on another PC
+!.vscode/tasks.json
+!.vscode/settings.json
