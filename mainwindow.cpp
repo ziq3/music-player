@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 
 #include <QAction>
+#include <QDebug>
 #include <QFileDialog>
 #include <QHBoxLayout>
 #include <QLabel>
@@ -8,11 +9,9 @@
 #include <QMenuBar>
 #include <QPushButton>
 #include <QSlider>
-#include <QVBoxLayout>
 #include <QTime>
-#include <QDebug>
-MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent)
+#include <QVBoxLayout>
+MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 {
 
     createMenuBar();
@@ -20,8 +19,6 @@ MainWindow::MainWindow(QWidget *parent)
     createVideoArea();
     createSeekBar();
     createControlBar();
-
-
 
     setupConnections();
 }
@@ -64,21 +61,19 @@ void MainWindow::createControlBar()
     previousButton = new QPushButton("Prev");
     playButton = new QPushButton("Play");
     nextButton = new QPushButton("Next");
-    shuffle=new QPushButton("Shuffle");
-    loop=new QPushButton("Loop");
+    shuffle = new QPushButton("Shuffle");
+    loop = new QPushButton("Loop");
 
     controlBarLayout->addWidget(previousButton);
     controlBarLayout->addWidget(playButton);
     controlBarLayout->addWidget(nextButton);
     controlBarLayout->addWidget(shuffle);
     controlBarLayout->addWidget(loop);
-
 }
 void MainWindow::showEvent(QShowEvent *event)
 {
     QMainWindow::showEvent(event);
-    if(!mpv)
-    {
+    if (!mpv) {
         initMpv();
     }
 }
@@ -99,43 +94,46 @@ void MainWindow::createSeekBar()
 void MainWindow::setupConnections()
 {
     connect(openAction, &QAction::triggered, this, [this] {
-        QString fileName = QFileDialog::getOpenFileName(this, "Open File", QString(), "Audio Files (*.mp3 *.flac *.wav *.m4a *.aac *.ogg *.webm);;All Files (*.*)");
+        QString fileName = QFileDialog::getOpenFileName(
+                this, "Open File", QString(),
+                "Audio Files (*.mp3 *.flac *.wav *.m4a *.aac *.ogg *.webm);;All Files (*.*)");
+
         if (!fileName.isEmpty()) {
             setWindowTitle("Player - " + fileName);
-            const char *cmd[] = {"loadfile", fileName.toUtf8().constData(), NULL};
+            const char *cmd[] = { "loadfile", fileName.toUtf8().constData(), NULL };
             mpv_command(mpv, cmd);
-            isPlaying=true;
-            isFileLoaded=true;
+            isPlaying = true;
+            isFileLoaded = true;
             playButton->setText("Pause");
             double durationInSeconds = 0.0;
-            if (mpv_get_property(mpv, "duration", MPV_FORMAT_DOUBLE, &durationInSeconds) == 0) {           
+            if (mpv_get_property(mpv, "duration", MPV_FORMAT_DOUBLE, &durationInSeconds) == 0) {
                 seekSlider->setMaximum(static_cast<int>(durationInSeconds));
-                durationLabel->setText(QTime(0, 0).addSecs(static_cast<int>(durationInSeconds)).toString("mm:ss"));
+                durationLabel->setText(
+                        QTime(0, 0).addSecs(static_cast<int>(durationInSeconds)).toString("mm:ss"));
             }
         }
     });
 
-    connect(playButton,&QPushButton::clicked,this,[this]{
-        if(!isFileLoaded)return;
-        if(isPlaying)
-        {
+    connect(playButton, &QPushButton::clicked, this, [this] {
+        if (!isFileLoaded)
+            return;
+        if (isPlaying) {
             playButton->setText("Play");
-        }
-        else
-        {
+        } else {
             playButton->setText("Pause");
         }
-        const char *cmd[] = {"cycle", "pause", NULL};
+        const char *cmd[] = { "cycle", "pause", NULL };
         mpv_command(mpv, cmd);
-        isPlaying=!isPlaying;
+        isPlaying = !isPlaying;
     });
     connect(seekSlider, &QSlider::sliderReleased, this, [this] {
-        if(!isFileLoaded)return;
+        if (!isFileLoaded)
+            return;
         if (mpv) {
             int pos = seekSlider->value();
             QString posStr = QString::number(pos);
 
-            const char *cmd[] = {"seek", posStr.toUtf8(), "absolute", NULL};
+            const char *cmd[] = { "seek", posStr.toUtf8(), "absolute", NULL };
             mpv_command(mpv, cmd);
         }
     });

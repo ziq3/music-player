@@ -20,14 +20,14 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow() override;
+
 private:
     void showEvent(QShowEvent *event) override;
 
     bool isPlaying = false;
     bool isFileLoaded = false;
-    mpv_handle *mpv=nullptr;
+    mpv_handle *mpv = nullptr;
     void initMpv();
-
 
     void createMenuBar();
     void createCentralWidget();
@@ -58,8 +58,5 @@ private:
     QVBoxLayout *mainLayout;
     QHBoxLayout *controlBarLayout;
     QHBoxLayout *seekBarLayout;
-
-
-
 };
 #endif

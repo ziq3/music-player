@@ -28,6 +28,10 @@ compile_commands.json
 .DS_Store
 Thumbs.db
 
+# IDE & Compiler caches
+.cache/
+
 # Explicitly keep VS Code task & setting configs so build/run commands work on another PC
 !.vscode/tasks.json
 !.vscode/settings.json
+
