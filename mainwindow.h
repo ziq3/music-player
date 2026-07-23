@@ -24,6 +24,7 @@ private:
     void showEvent(QShowEvent *event) override;
 
     bool isPlaying = false;
+    bool isFileLoaded = false;
     mpv_handle *mpv=nullptr;
     void initMpv();
 
@@ -51,6 +52,8 @@ private:
     QPushButton *previousButton;
     QPushButton *playButton;
     QPushButton *nextButton;
+    QPushButton *shuffle;
+    QPushButton *loop;
 
     QVBoxLayout *mainLayout;
     QHBoxLayout *controlBarLayout;

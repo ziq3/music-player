@@ -9,7 +9,8 @@
 #include <QPushButton>
 #include <QSlider>
 #include <QVBoxLayout>
-
+#include <QTime>
+#include <QDebug>
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
@@ -60,13 +61,18 @@ void MainWindow::createControlBar()
     controlBarLayout = new QHBoxLayout;
     mainLayout->addLayout(controlBarLayout);
 
-    previousButton = new QPushButton("Prev", this);
-    playButton = new QPushButton("Play", this);
-    nextButton = new QPushButton("Next", this);
+    previousButton = new QPushButton("Prev");
+    playButton = new QPushButton("Play");
+    nextButton = new QPushButton("Next");
+    shuffle=new QPushButton("Shuffle");
+    loop=new QPushButton("Loop");
 
     controlBarLayout->addWidget(previousButton);
     controlBarLayout->addWidget(playButton);
     controlBarLayout->addWidget(nextButton);
+    controlBarLayout->addWidget(shuffle);
+    controlBarLayout->addWidget(loop);
+
 }
 void MainWindow::showEvent(QShowEvent *event)
 {
@@ -81,9 +87,9 @@ void MainWindow::createSeekBar()
     seekBarLayout = new QHBoxLayout;
     mainLayout->addLayout(seekBarLayout);
 
-    currentTimeLabel = new QLabel("00:00", this);
-    seekSlider = new QSlider(Qt::Horizontal, this);
-    durationLabel = new QLabel("22:00", this);
+    currentTimeLabel = new QLabel("00:00");
+    seekSlider = new QSlider(Qt::Horizontal);
+    durationLabel = new QLabel("22:00");
 
     seekBarLayout->addWidget(currentTimeLabel);
     seekBarLayout->addWidget(seekSlider);
@@ -93,13 +99,24 @@ void MainWindow::createSeekBar()
 void MainWindow::setupConnections()
 {
     connect(openAction, &QAction::triggered, this, [this] {
-        QString fileName = QFileDialog::getOpenFileName(this, "Open File", QString(), "All Files (*.*)");
+        QString fileName = QFileDialog::getOpenFileName(this, "Open File", QString(), "Audio Files (*.mp3 *.flac *.wav *.m4a *.aac *.ogg *.webm);;All Files (*.*)");
         if (!fileName.isEmpty()) {
             setWindowTitle("Player - " + fileName);
+            const char *cmd[] = {"loadfile", fileName.toUtf8().constData(), NULL};
+            mpv_command(mpv, cmd);
+            isPlaying=true;
+            isFileLoaded=true;
+            playButton->setText("Pause");
+            double durationInSeconds = 0.0;
+            if (mpv_get_property(mpv, "duration", MPV_FORMAT_DOUBLE, &durationInSeconds) == 0) {           
+                seekSlider->setMaximum(static_cast<int>(durationInSeconds));
+                durationLabel->setText(QTime(0, 0).addSecs(static_cast<int>(durationInSeconds)).toString("mm:ss"));
+            }
         }
     });
 
     connect(playButton,&QPushButton::clicked,this,[this]{
+        if(!isFileLoaded)return;
         if(isPlaying)
         {
             playButton->setText("Play");
@@ -108,7 +125,19 @@ void MainWindow::setupConnections()
         {
             playButton->setText("Pause");
         }
+        const char *cmd[] = {"cycle", "pause", NULL};
+        mpv_command(mpv, cmd);
         isPlaying=!isPlaying;
+    });
+    connect(seekSlider, &QSlider::sliderReleased, this, [this] {
+        if(!isFileLoaded)return;
+        if (mpv) {
+            int pos = seekSlider->value();
+            QString posStr = QString::number(pos);
+
+            const char *cmd[] = {"seek", posStr.toUtf8(), "absolute", NULL};
+            mpv_command(mpv, cmd);
+        }
     });
 }
 MainWindow::~MainWindow()
