@@ -94,9 +94,7 @@ void MainWindow::createSeekBar()
 void MainWindow::setupConnections()
 {
     connect(openAction, &QAction::triggered, this, [this] {
-        QString fileName = QFileDialog::getOpenFileName(
-                this, "Open File", QString(),
-                "Audio Files (*.mp3 *.flac *.wav *.m4a *.aac *.ogg *.webm);;All Files (*.*)");
+        QString fileName = QFileDialog::getOpenFileName(this, "Open File", QString(), "All Files (*)");
 
         if (!fileName.isEmpty()) {
             setWindowTitle("Player - " + fileName);
