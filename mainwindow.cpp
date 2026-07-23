@@ -13,14 +13,26 @@
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
+
     createMenuBar();
     createCentralWidget();
     createVideoArea();
     createSeekBar();
     createControlBar();
+
+
+
     setupConnections();
 }
-
+void MainWindow::initMpv()
+{
+    mpv = mpv_create();
+    if (!mpv)
+        return;
+    intptr_t wid = videoWidget->winId();
+    mpv_set_option(mpv, "wid", MPV_FORMAT_INT64, &wid);
+    mpv_initialize(mpv);
+}
 void MainWindow::createCentralWidget()
 {
     centralWidget = new QWidget(this);
@@ -38,7 +50,7 @@ void MainWindow::createMenuBar()
 
 void MainWindow::createVideoArea()
 {
-    videoWidget = new QWidget(this);
+    videoWidget = new QWidget(centralWidget);
     videoWidget->setStyleSheet("background-color: black;");
     mainLayout->addWidget(videoWidget, 1);
 }
@@ -56,7 +68,14 @@ void MainWindow::createControlBar()
     controlBarLayout->addWidget(playButton);
     controlBarLayout->addWidget(nextButton);
 }
-
+void MainWindow::showEvent(QShowEvent *event)
+{
+    QMainWindow::showEvent(event);
+    if(!mpv)
+    {
+        initMpv();
+    }
+}
 void MainWindow::createSeekBar()
 {
     seekBarLayout = new QHBoxLayout;
@@ -82,13 +101,20 @@ void MainWindow::setupConnections()
 
     connect(playButton,&QPushButton::clicked,this,[this]{
         if(isPlaying)
-            {
+        {
             playButton->setText("Play");
         }
         else
-            {
+        {
             playButton->setText("Pause");
         }
         isPlaying=!isPlaying;
     });
+}
+MainWindow::~MainWindow()
+{
+    if (mpv) {
+        mpv_terminate_destroy(mpv);
+        mpv = nullptr;
+    }
 }

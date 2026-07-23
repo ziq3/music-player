@@ -12,16 +12,22 @@
 #include <QPushButton>
 #include <QSlider>
 #include <QVBoxLayout>
-
+#include <mpv/client.h>
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
 public:
     explicit MainWindow(QWidget *parent = nullptr);
-
+    ~MainWindow() override;
 private:
+    void showEvent(QShowEvent *event) override;
+
     bool isPlaying = false;
+    mpv_handle *mpv=nullptr;
+    void initMpv();
+
+
     void createMenuBar();
     void createCentralWidget();
 
@@ -49,5 +55,8 @@ private:
     QVBoxLayout *mainLayout;
     QHBoxLayout *controlBarLayout;
     QHBoxLayout *seekBarLayout;
+
+
+
 };
-#endif 
+#endif
