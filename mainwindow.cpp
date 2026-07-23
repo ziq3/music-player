@@ -29,7 +29,15 @@ void MainWindow::initMpv()
         return;
     intptr_t wid = videoWidget->winId();
     mpv_set_option(mpv, "wid", MPV_FORMAT_INT64, &wid);
+    mpv_observe_property(mpv, 0, "time-pos", MPV_FORMAT_DOUBLE);
     mpv_initialize(mpv);
+    mpv_set_wakeup_callback(
+            mpv,
+            [](void *ctx) {
+                QMetaObject::invokeMethod(static_cast<MainWindow *>(ctx),
+                                          &MainWindow::handleMpvEvents, Qt::QueuedConnection);
+            },
+            this);
 }
 void MainWindow::createCentralWidget()
 {
@@ -94,21 +102,13 @@ void MainWindow::createSeekBar()
 void MainWindow::setupConnections()
 {
     connect(openAction, &QAction::triggered, this, [this] {
-        QString fileName = QFileDialog::getOpenFileName(this, "Open File", QString(), "All Files (*)");
+        QString fileName =
+                QFileDialog::getOpenFileName(this, "Open File", QString(), "All Files (*)");
 
         if (!fileName.isEmpty()) {
             setWindowTitle("Player - " + fileName);
             const char *cmd[] = { "loadfile", fileName.toUtf8().constData(), NULL };
             mpv_command(mpv, cmd);
-            isPlaying = true;
-            isFileLoaded = true;
-            playButton->setText("Pause");
-            double durationInSeconds = 0.0;
-            if (mpv_get_property(mpv, "duration", MPV_FORMAT_DOUBLE, &durationInSeconds) == 0) {
-                seekSlider->setMaximum(static_cast<int>(durationInSeconds));
-                durationLabel->setText(
-                        QTime(0, 0).addSecs(static_cast<int>(durationInSeconds)).toString("mm:ss"));
-            }
         }
     });
 
@@ -141,5 +141,36 @@ MainWindow::~MainWindow()
     if (mpv) {
         mpv_terminate_destroy(mpv);
         mpv = nullptr;
+    }
+}
+void MainWindow::handleMpvEvents()
+{
+    while (mpv) {
+        mpv_event *event = mpv_wait_event(mpv, 0);
+        if (event->event_id == MPV_EVENT_NONE)
+            break;
+        if (event->event_id == MPV_EVENT_FILE_LOADED) {
+            isPlaying = true;
+            isFileLoaded = true;
+            playButton->setText("Pause");
+            double durationInSeconds = 0.0;
+            if (mpv_get_property(mpv, "duration", MPV_FORMAT_DOUBLE, &durationInSeconds) == 0) {
+
+                seekSlider->setMaximum(static_cast<int>(durationInSeconds));
+                durationLabel->setText(
+                        QTime(0, 0).addSecs(static_cast<int>(durationInSeconds)).toString("mm:ss"));
+            }
+        }
+        if (event->event_id == MPV_EVENT_PROPERTY_CHANGE) {
+            mpv_event_property *mpv_property = static_cast<mpv_event_property *>(event->data);
+            if (mpv_property->data) {
+                if (QString(mpv_property->name) == "time-pos") {
+                    double seconds = *static_cast<double *>(mpv_property->data);
+                    QString timeStr =
+                            QTime(0, 0).addSecs(static_cast<int>(seconds)).toString("mm:ss");
+                    currentTimeLabel->setText(timeStr);
+                }
+            }
+        }
     }
 }

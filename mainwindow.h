@@ -21,6 +21,9 @@ public:
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow() override;
 
+private slots:
+    void handleMpvEvents();
+
 private:
     void showEvent(QShowEvent *event) override;
 
