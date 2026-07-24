@@ -31,6 +31,7 @@ private:
     bool isFileLoaded = false;
     mpv_handle *mpv = nullptr;
     void initMpv();
+    QString formatTime(double seconds) const;
 
     void createMenuBar();
     void createCentralWidget();

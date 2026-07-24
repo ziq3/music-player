@@ -39,6 +39,11 @@ void MainWindow::initMpv()
             },
             this);
 }
+QString MainWindow::formatTime(double seconds) const
+{
+    int secs = static_cast<int>(seconds);
+    return QTime(0, 0).addSecs(secs).toString(secs >= 3600 ? "hh:mm:ss" : "mm:ss");
+}
 void MainWindow::createCentralWidget()
 {
     centralWidget = new QWidget(this);
@@ -92,7 +97,7 @@ void MainWindow::createSeekBar()
 
     currentTimeLabel = new QLabel("00:00");
     seekSlider = new QSlider(Qt::Horizontal);
-    durationLabel = new QLabel("22:00");
+    durationLabel = new QLabel("00:00");
 
     seekBarLayout->addWidget(currentTimeLabel);
     seekBarLayout->addWidget(seekSlider);
@@ -131,7 +136,7 @@ void MainWindow::setupConnections()
             int pos = seekSlider->value();
             QString posStr = QString::number(pos);
 
-            const char *cmd[] = { "seek", posStr.toUtf8(), "absolute", NULL };
+            const char *cmd[] = { "seek", posStr.toUtf8().constData(), "absolute", NULL };
             mpv_command(mpv, cmd);
         }
     });
@@ -157,8 +162,7 @@ void MainWindow::handleMpvEvents()
             if (mpv_get_property(mpv, "duration", MPV_FORMAT_DOUBLE, &durationInSeconds) == 0) {
 
                 seekSlider->setMaximum(static_cast<int>(durationInSeconds));
-                durationLabel->setText(
-                        QTime(0, 0).addSecs(static_cast<int>(durationInSeconds)).toString("mm:ss"));
+                durationLabel->setText(formatTime(durationInSeconds));
             }
         }
         if (event->event_id == MPV_EVENT_PROPERTY_CHANGE) {
@@ -166,9 +170,10 @@ void MainWindow::handleMpvEvents()
             if (mpv_property->data) {
                 if (QString(mpv_property->name) == "time-pos") {
                     double seconds = *static_cast<double *>(mpv_property->data);
-                    QString timeStr =
-                            QTime(0, 0).addSecs(static_cast<int>(seconds)).toString("mm:ss");
-                    currentTimeLabel->setText(timeStr);
+                    currentTimeLabel->setText(formatTime(seconds));
+                    if (!seekSlider->isSliderDown()) {
+                        seekSlider->setValue(static_cast<int>(seconds));
+                    }
                 }
             }
         }
