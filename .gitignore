@@ -31,7 +31,13 @@ Thumbs.db
 # IDE & Compiler caches
 .cache/
 
+# Local Dataset & SQLite Database Files
+fma_small/
+tracks.csv
+*.db
+*.db-wal
+*.db-shm
+
 # Explicitly keep VS Code task & setting configs so build/run commands work on another PC
 !.vscode/tasks.json
 !.vscode/settings.json
-

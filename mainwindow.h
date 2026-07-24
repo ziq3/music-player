@@ -1,6 +1,6 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
-
+#include "databasemanager.h"
 #include <QMainWindow>
 #include <QAction>
 #include <QFileDialog>
@@ -25,6 +25,7 @@ private slots:
     void handleMpvEvents();
 
 private:
+    DatabaseManager dbManager;
     void showEvent(QShowEvent *event) override;
 
     bool isPlaying = false;

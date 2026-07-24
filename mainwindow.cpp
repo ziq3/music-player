@@ -13,7 +13,6 @@
 #include <QVBoxLayout>
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 {
-
     createMenuBar();
     createCentralWidget();
     createVideoArea();
@@ -21,6 +20,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
     createControlBar();
 
     setupConnections();
+    QList<Track> tracks = dbManager.getAllTracks();
+    qDebug() << "Loaded" << tracks.size() << "tracks from database!";
 }
 void MainWindow::initMpv()
 {
@@ -82,6 +83,9 @@ void MainWindow::createControlBar()
     controlBarLayout->addWidget(nextButton);
     controlBarLayout->addWidget(shuffle);
     controlBarLayout->addWidget(loop);
+
+    shuffle->setCheckable(true);
+    loop->setCheckable(true);
 }
 void MainWindow::showEvent(QShowEvent *event)
 {
@@ -137,6 +141,29 @@ void MainWindow::setupConnections()
             QString posStr = QString::number(pos);
 
             const char *cmd[] = { "seek", posStr.toUtf8().constData(), "absolute", NULL };
+            mpv_command(mpv, cmd);
+        }
+    });
+    connect(shuffle, &QPushButton::toggled, this, [this](bool checked) {
+        if (!isFileLoaded)
+            return;
+        if (checked) {
+            const char *cmd[] = { "playlist-shuffle", nullptr };
+            mpv_command(mpv, cmd);
+        } else {
+            const char *cmd[] = { "playlist-unshuffle", nullptr };
+            mpv_command(mpv, cmd);
+        }
+    });
+
+    connect(loop, &QPushButton::toggled, this, [this](bool checked) {
+        if (!isFileLoaded)
+            return;
+        if (checked) {
+            const char *cmd[] = { "set_property", "loop-file", "inf", nullptr };
+            mpv_command(mpv, cmd);
+        } else {
+            const char *cmd[] = { "set_property", "loop-file", "no", nullptr };
             mpv_command(mpv, cmd);
         }
     });
