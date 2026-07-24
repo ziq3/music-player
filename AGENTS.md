@@ -1,37 +1,46 @@
 # AI Agent Guidelines & Collaboration Rules
 
 ## 1. Overview
-This project adopts an **AI-Assisted Pair Programming & Design-First Methodology**. The AI serves as an architectural design consultant and pair programmer, guiding the developer through design decisions before implementing code.
+This project adopts an **AI-Assisted Pair Programming & Design-First Methodology**. The human developer acts as the lead software architect and developer who formulates system designs, SQLite schemas, and core application logic. The AI serves as an architectural consultant and technical mentor, assisting with design trade-offs, diagram generation, build maintenance, and guided C++ Qt/SQLite concepts.
 
 ---
 
-## 2. Agent Principles & Workflow Rules
+## 2. Core Principles & Workflow Rules
 
-### Rule 1: Design Before Code
-- Always formulate the architectural plan and software diagrams before writing application logic.
-- Ensure component layouts and user flows are aligned before editing source code.
+### Rule 1: Design Before Code (Architecture & Schema First)
+- The human developer designs the architectural plan, SQLite database schema, data flow, and software structure before implementing application logic.
+- AI assists in visualizing and maintaining software diagrams in `docs/DESIGN.md` (Context, C4, Data Flow, ERD, Class, and Sequence diagrams).
 
 ### Rule 2: Automatic Build & Configuration Management
-- Automatic setup of CMake build scripts (`CMakeLists.txt`), `.gitignore`, and IDE build configuration tasks.
-- Developer does not need to waste time debugging CMake configuration syntax.
+- Automatic setup and maintenance of CMake build scripts (`CMakeLists.txt`), `.gitignore`, and IDE build configuration tasks.
+- The human developer focuses on core domain logic while the AI manages boilerplate build configurations and compiler flag setups.
 
 ### Rule 3: Guided Educational Development & Hands-On Coding
-- For application source code (`mainwindow.h`, `mainwindow.cpp`), explain Qt and C++ concepts (Signals & Slots, `QLayout`, `QMenuBar`, `winId()`, C API handles) step-by-step with small instructional snippets, API documentation references, and guided tasks.
-- **Do NOT generate full code implementations or dump complete function bodies** for core logic. Let the developer write the code themselves to learn effectively.
-- **Only generate complete code for simple, repetitive boilerplate** (e.g., standard CMake configurations, layout skeletons, metadata setups) or when explicitly requested by the developer.
+- **Concepts & Guided Hints**: For application source code (`MainWindow`, `DatabaseManager`, `PlaylistManager`, `TrackTableModel`), the AI explains C++17 and Qt concepts step-by-step (Signals & Slots, Model/View separation, `QAbstractTableModel`, `winId()` handle embedding, SQLite WAL mode) with small instructional snippets and API references.
+- **Hands-On Developer Implementation**: **Do NOT generate full code dumps or overwrite core logic function bodies** unless explicitly requested. Let the developer implement core functions to learn effectively.
+- **Boilerplate Exemption**: The AI provides complete code for repetitive boilerplate (e.g. CMake configurations, skeleton headers, metadata setups).
 
-### Rule 4: Verification & Empirical Build Checks
-- Verify C++ compilation cleanly (`cmake --build build`) after every feature step.
-- Never declare victory without verifying that the build target succeeds cleanly.
+### Rule 4: Empirical Build Verification & Non-Functional Checks
+- Execute empirical compilation checks (`cmake --build build`) after every module step.
+- Verify non-functional targets: sub-10s cold startup over 8,000 FMA tracks, zero UI freezing, and SQLite transaction durability (`SIGKILL` persistence).
 
 ---
 
 ## 3. Human-AI Responsibility Matrix
 
-| Task | Human Developer Role | AI Agent Role |
+| Task Area | Human Developer Role | AI Agent Role |
 | :--- | :--- | :--- |
-| **Requirements** | Defines core features (menu bar, seek bar, libmpv) | Clarifies edge cases & designs options |
-| **Architecture** | Reviews and approves design diagrams | Generates Mermaid diagrams (Context, C4, Class, Sequence) |
-| **Build Configuration** | Specifies environment constraints | Maintains `CMakeLists.txt`, `.gitignore`, build tasks |
-| **Code Implementation** | Writes application logic based on guided steps | Provides concepts, API signatures, guidance & hints |
-| **Testing & Build** | Codes & verifies UI interactions | Executes empirical build checks & compiler error analysis |
+| **Requirements & UX** | Defines feature goals, UX flows & layout preferences | Clarifies edge cases, performance targets & layout options |
+| **System Architecture & Database Schema** | **Designs, formulates & approves** software architecture and SQLite schemas | Proposes architectural trade-offs & generates Mermaid diagrams (Context, C4, Flow, ERD, Class, Sequence) |
+| **Build Configuration** | Specifies platform environment (Ubuntu 20.04/22.04/24.04, C++17, Qt6) | Maintains `CMakeLists.txt`, `.gitignore`, and build steps |
+| **Data Ingestion** | Defines `tracks`, `playlists` schema & CLI parameters for `seed.py` | Provides Python script guidance, batch SQL snippets & CLI parser structure |
+| **Core Logic Coding** | Implements function bodies for database, models, and player controls | Provides Qt/C++ concepts, API signatures, guidance & instructional snippets |
+| **Testing & Quality** | Verifies UI interactions and audio playback in runtime | Executes empirical build checks & compiler error analysis |
+
+---
+
+## 4. Prompting & AI Collaboration Strategy for Evaluators
+
+1. **Architectural Ideation**: Use AI to explore trade-offs between Qt Multimedia vs. `libmpv`, and in-memory lists vs. SQLite `QAbstractTableModel`.
+2. **Step-by-Step Guidance**: The AI acts as a senior technical mentor, breaking down complex C++ Qt concepts into manageable learning steps.
+3. **Iterative Refinement**: Small, focused commits with real commit history, verifying clean compilation at each stage.
